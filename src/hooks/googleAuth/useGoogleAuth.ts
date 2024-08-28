@@ -6,7 +6,6 @@ import {
   signInWithRedirect,
   signOut,
   getRedirectResult,
-  User,
   UserCredential,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
@@ -37,7 +36,9 @@ const useGoogleAuth = () => {
     }
   };
 
-  const handleAuthResult = async (result: UserCredential) => {
+  const handleAuthResult = async (result: UserCredential | null) => {
+    if (!result) return; // Asegúrate de que result no sea null
+
     const userUid = result.user.uid;
     const userDocRef = doc(db, 'users', userUid);
     const userDoc = await getDoc(userDocRef);
@@ -45,7 +46,6 @@ const useGoogleAuth = () => {
     const lastLogin = new Date(); // Campo para registrar el último login
 
     if (config.allowRegisterNewUsers) {
-      // Modo 1: Acepta usuarios nuevos
       if (!userDoc.exists()) {
         // Registrar el nuevo usuario en la entidad users
         await setDoc(userDocRef, {
@@ -59,9 +59,8 @@ const useGoogleAuth = () => {
         // Actualizar el último login si el usuario ya existe
         await updateDoc(userDocRef, { lastLogin });
       }
-      setUser(result.user);
+      setUser(result.user); // Actualizar el contexto del usuario
     } else {
-      // Modo 2: Solo permite usuarios registrados
       if (userDoc.exists()) {
         // Usuario está registrado en la colección 'users'
         const updateData = {
@@ -71,7 +70,7 @@ const useGoogleAuth = () => {
         };
 
         await updateDoc(userDocRef, updateData);
-        setUser(result.user);
+        setUser(result.user); // Actualizar el contexto del usuario
       } else {
         // Usuario no está registrado
         alert('No tienes una cuenta registrada. Por favor, contacta al administrador.');
@@ -80,7 +79,6 @@ const useGoogleAuth = () => {
     }
   };
 
-  // update
   useEffect(() => {
     const checkRedirectResult = async () => {
       try {
