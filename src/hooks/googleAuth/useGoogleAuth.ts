@@ -80,6 +80,7 @@ const useGoogleAuth = () => {
     }
   };
 
+  // update
   useEffect(() => {
     const checkRedirectResult = async () => {
       try {
