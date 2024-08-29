@@ -22,8 +22,6 @@ const useGoogleAuth = () => {
     persistToken: true,
   };
 
-  //
-
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
