@@ -1,4 +1,3 @@
-import { CircularProgress } from '@mui/material';
 import Loader from 'components/Loader';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from 'firebaseConfig'; // Asegúrate de que esta ruta apunte correctamente

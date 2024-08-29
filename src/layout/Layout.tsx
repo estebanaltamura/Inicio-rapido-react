@@ -1,4 +1,3 @@
-import { Box, useMediaQuery } from '@mui/material';
 import {
   layoutMaxWidth,
   menuBarHeight,
@@ -15,23 +14,22 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const isDesktop = useMediaQuery(`(min-width: ${layoutMaxWidth}px)`);
+  const isDesktop = window.matchMedia(`(min-width: ${layoutMaxWidth}px)`).matches;
+
+  const paddingTop = menuBarHeight + (isDesktop ? paddingLayoutTopDesktop : paddingLayoutTopMobile);
+  const paddingLeftRight = isDesktop ? paddingLayoutLeftRightDesktop : paddingLayoutLeftRightMobile;
+  const paddingBottom = isDesktop ? paddingLayoutBottomDesktop : paddingLayoutBottomMobile;
 
   return (
-    <Box
-      sx={{
-        margin: '0 auto',
-        height: '100%',
-        minHeight: '100vh',
-        width: '100%',
+    <div
+      className="mx-auto w-full min-h-screen"
+      style={{
         maxWidth: `${layoutMaxWidth}px`,
-        padding: `${menuBarHeight + (isDesktop ? paddingLayoutTopDesktop : paddingLayoutTopMobile)}px ${
-          isDesktop ? paddingLayoutLeftRightDesktop : paddingLayoutLeftRightMobile
-        }px ${isDesktop ? paddingLayoutBottomDesktop : paddingLayoutBottomMobile}px`,
+        padding: `${paddingTop}px ${paddingLeftRight}px ${paddingBottom}px`,
       }}
     >
       {children}
-    </Box>
+    </div>
   );
 };
 
