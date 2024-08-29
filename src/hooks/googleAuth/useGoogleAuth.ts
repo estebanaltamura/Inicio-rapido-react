@@ -15,7 +15,6 @@ import { useEffect } from 'react';
 const useGoogleAuth = () => {
   const { user, setUser } = useUser();
   const auth = getAuth();
-  const isMobile = window.innerWidth <= 600;
 
   const config = {
     allowRegisterNewUsers: true,
@@ -25,12 +24,9 @@ const useGoogleAuth = () => {
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      if (isMobile) {
-        await signInWithRedirect(auth, provider);
-      } else {
-        const result = await signInWithPopup(auth, provider);
-        await handleAuthResult(result);
-      }
+      // Usa signInWithPopup en todos los casos, incluyendo dispositivos móviles
+      const result = await signInWithPopup(auth, provider);
+      await handleAuthResult(result);
     } catch (error) {
       console.error('Error en la autenticación:', error);
     }
