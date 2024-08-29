@@ -80,6 +80,7 @@ const useGoogleAuth = () => {
   };
 
   useEffect(() => {
+    console.log(auth);
     const checkRedirectResult = async () => {
       try {
         const result = await getRedirectResult(auth);
