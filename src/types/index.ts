@@ -1,3 +1,9 @@
+export interface Field {
+  label: string;
+  type: 'string' | 'boolean' | 'number' | 'timestamp' | 'geoPoint';
+  name: string;
+}
+
 export enum Entities {
   'products' = 'products',
   'purchases' = 'purchases',
