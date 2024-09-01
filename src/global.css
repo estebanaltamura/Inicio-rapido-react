@@ -19,3 +19,16 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #0084f0; /* Azul, como los elementos seleccionados */
+  border-radius: 0px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #c7c7c7; /* Gris oscuro */
+}

@@ -10,101 +10,45 @@ const InputLocation = ({
   variant = 'outlined',
   isDisabled,
   helperText = 'Podes ingresar mas de una',
-  className = '',
-  keepValue = false,
+  keepValue = true, // Cambiado a true para que el valor quede en el input
 }) => {
-  const [selectedPlaceId, setSelectedPlaceId] = useState(0);
   const [query, setQuery] = useState(value);
   const autoCompleteRef = useRef(null);
-  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false); // Estado para controlar la carga del script
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   let autoComplete;
 
   async function handlePlaceSelect(updateQuery) {
     const addressObject = autoComplete.getPlace();
-    const queryStr = addressObject.formatted_address;
+    const queryStr = addressObject.formatted_address || '';
     updateQuery(queryStr);
 
     if (!addressObject.geometry || !addressObject.geometry.location) {
       return;
     }
 
-    let city = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'locality');
-          }
-          return false;
-        })
-      : null;
+    let city =
+      addressObject.address_components?.find((ad) => ad.types?.includes('locality')) ||
+      addressObject.address_components?.find((ad) => ad.types?.includes('sublocality'));
 
-    if (!city)
-      city = addressObject.address_components
-        ? addressObject.address_components.find((ad) => {
-            if (ad && ad.types) {
-              return ad.types.find((t) => t === 'sublocality');
-            }
-            return false;
-          })
-        : null;
+    const county = addressObject.address_components?.find((ad) =>
+      ad.types?.includes('administrative_area_level_2'),
+    );
 
-    const county = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'administrative_area_level_2');
-          }
-          return false;
-        })
-      : null;
+    const postal_code = addressObject.address_components?.find((ad) => ad.types?.includes('postal_code'));
 
-    const postal_code = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'postal_code');
-          }
-          return false;
-        })
-      : null;
+    const state = addressObject.address_components?.find((ad) =>
+      ad.types?.includes('administrative_area_level_1'),
+    );
 
-    const state = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'administrative_area_level_1');
-          }
-          return false;
-        })
-      : null;
+    const street =
+      addressObject.address_components?.find((ad) => ad.types?.includes('route'))?.long_name || '';
 
-    let street = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'route');
-          }
-          return false;
-        })
-      : '';
+    const streetNumber =
+      addressObject.address_components?.find((ad) => ad.types?.includes('street_number'))?.long_name || '';
 
-    if (street) street = street.long_name;
-
-    let streetNumber = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'street_number');
-          }
-          return false;
-        })
-      : '';
-
-    if (streetNumber) streetNumber = streetNumber.long_name;
-
-    const country = addressObject.address_components
-      ? addressObject.address_components.find((ad) => {
-          if (ad && ad.types) {
-            return ad.types.find((t) => t === 'country');
-          }
-          return false;
-        })
-      : '';
+    const country =
+      addressObject.address_components?.find((ad) => ad.types?.includes('country'))?.long_name || '';
 
     onPlaceSelected({
       lat: addressObject.geometry.location.lat(),
@@ -113,25 +57,22 @@ const InputLocation = ({
       county: county ? county.long_name : null,
       postal_code: postal_code ? postal_code.long_name : null,
       state: state ? state.long_name : null,
-      addressObject,
-      addressString: addressObject.formatted_address,
+      address: queryStr, // Captura la dirección completa para que se mantenga en el input
       streetAndNumber: streetNumber ? `${street} ${streetNumber}` : street,
-      country: country ? country.long_name : null,
+      country: country,
       geohash: geohashForLocation([
         addressObject.geometry.location.lat(),
         addressObject.geometry.location.lng(),
       ]),
     });
 
-    if (!keepValue) setQuery('');
-
-    setSelectedPlaceId((prevId) => prevId + 1);
+    if (keepValue) setQuery(queryStr); // Actualizar el estado query para que el valor quede en el input
   }
 
   function handleScriptLoad(updateQuery, autoCompleteRefAux) {
     if (window.google && window.google.maps) {
       autoComplete = new window.google.maps.places.Autocomplete(autoCompleteRefAux.current, {
-        types: ['(cities)'],
+        types: ['address'], // Cambiado a 'address' para permitir direcciones completas
         componentRestrictions: { country: 'ar' },
       });
 
@@ -150,7 +91,7 @@ const InputLocation = ({
       script.defer = true;
       script.onload = () => {
         if (window.google && window.google.maps) {
-          setIsGoogleMapsLoaded(true); // Marcar que el script ha sido cargado
+          setIsGoogleMapsLoaded(true);
           callback();
         } else {
           console.error('Google Maps script failed to load.');
@@ -159,7 +100,7 @@ const InputLocation = ({
       script.onerror = () => console.error('Error loading Google Maps script.');
       document.head.appendChild(script);
     } else {
-      setIsGoogleMapsLoaded(true); // Marcar que el script ya estaba cargado
+      setIsGoogleMapsLoaded(true);
       callback();
     }
   }
@@ -176,24 +117,24 @@ const InputLocation = ({
     }
   }, [isGoogleMapsLoaded]);
 
+  useEffect(() => {
+    setQuery(value); // Mantener actualizado el input con el valor desde props
+  }, [value]);
+
   return (
-    <div className={`relative ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <input
-          type="text"
-          ref={autoCompleteRef}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          disabled={isDisabled}
-          placeholder={placeholder}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-          <img src="/images/icons/locationProfileJourneyIcon.svg" alt="" width="22px" />
-        </div>
+    <div className="relative">
+      <input
+        type="text"
+        ref={autoCompleteRef}
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        disabled={isDisabled}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 border h-11 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+      />
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+        <img src="/images/icons/locationProfileJourneyIcon.svg" alt="" width="22px" />
       </div>
-      {helperText && <p className="mt-2 text-sm text-gray-500">{helperText}</p>}
     </div>
   );
 };
@@ -206,7 +147,6 @@ InputLocation.propTypes = {
   variant: PropTypes.string,
   isDisabled: PropTypes.bool,
   helperText: PropTypes.string,
-  className: PropTypes.string,
   keepValue: PropTypes.bool,
 };
 
